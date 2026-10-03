@@ -1,0 +1,5 @@
+import { defineConfig } from 'vite';
+export default defineConfig({plugins:[{name:'offline-worker',generateBundle(_,bundle){const files=['/','/index.html','/manifest.webmanifest','/apple-touch-icon.png','/icon-192.png','/icon-512.png',...Object.keys(bundle).map(x=>'/'+x)];const version=JSON.stringify('tabu-'+Date.now());this.emitFile({type:'asset',fileName:'sw.js',source:`const CACHE=${version};const FILES=${JSON.stringify(files)};
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('tabu-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==self.location.origin)return;e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).catch(()=>e.request.mode==='navigate'?caches.match('/index.html'):Response.error())))});`})}}]});
